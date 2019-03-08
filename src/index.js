@@ -11,9 +11,9 @@ const Grid = styled.div`
 
 const DataGrid = ({ columns, data }) => (
   <Grid cols={columns.length}>
-    {columns.map(({ Header }) => (
-      <Header />
-    ))}
+    {columns.map(({ Header }) => {
+      if (typeof Header === "string") return <div>{Header}</div>;
+    })}
   </Grid>
 );
 
