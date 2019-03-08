@@ -2,18 +2,23 @@ import React from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 
-import "./styles.css";
-
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(${props => props.cols}, 1fr);
+  grid-template-columns: repeat(${props => props.cols}, auto);
 `;
+
+const wrapOrRender = (Wrapper, MaybeComponent) => {
+  if (typeof MaybeComponent === "string")
+    return <Wrapper>{MaybeComponent}</Wrapper>;
+  return <MaybeComponent />;
+};
 
 const DataGrid = ({ columns, data }) => (
   <Grid cols={columns.length}>
-    {columns.map(({ Header }) => {
-      if (typeof Header === "string") return <div>{Header}</div>;
-    })}
+    {columns.map(({ Header }) => wrapOrRender("Div", Header))}
+    {data.map((row, index) =>
+      columns.map(({ accessor }) => <div>{row[accessor]}</div>)
+    )}
   </Grid>
 );
 
@@ -27,7 +32,11 @@ function App() {
             accessor: "name"
           },
           {
-            Header: "Column Two",
+            Header: () => (
+              <div>
+                <em>Column Two</em>
+              </div>
+            ),
             accessor: "percent"
           },
           {
@@ -38,6 +47,12 @@ function App() {
         data={[
           {
             name: "A really long row of content",
+            percent: "5%",
+            value: "100000000000000000000000000"
+          },
+          {
+            name:
+              "A really, really, really, really, really long row of content",
             percent: "5%",
             value: 1000
           }
