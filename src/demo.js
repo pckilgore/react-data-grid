@@ -31,7 +31,7 @@ const data = [
   {
     customRow: {
       RowComponent: () => (
-        <div style={{ borderBottom: "1px solid red" }}>I'm A FUCKING ROW</div>
+        <div style={{ borderBottom: "1px solid red" }}>I'm A ROW THAT SPANS THIS ENTIRE ROW.</div>
       )
     }
   },
