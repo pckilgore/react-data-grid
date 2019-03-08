@@ -1,66 +1,66 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import styled from "styled-components";
+import { wrapOrRender } from "./utils";
 
+// This is a fundamental layout element that should not be changed.
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(${props => props.cols}, auto);
+  grid-template-columns: repeat(${props => props.numCols - 1}, auto);
 `;
 
-const wrapOrRender = (Wrapper, MaybeComponent) => {
-  if (typeof MaybeComponent === "string")
-    return <Wrapper>{MaybeComponent}</Wrapper>;
-  return <MaybeComponent />;
+const WholeRowWrapper = styled.div`
+  grid-column: 1 / ${props => props.numCols};
+`;
+
+const Cell = styled.div`
+  padding-right: ${props => props.colGap || "inherit"};
+`;
+
+export const DataGrid = props => {
+  const { columns, data, colGap } = props;
+  const numCols = columns.length;
+
+  return (
+    <Grid {...{ numCols }}>
+      {columns.map(({ Header }) => wrapOrRender(Cell, Header, { colGap }))}
+      {data.map(({ customRow, ...row }, index) => {
+        // Custom Rendering Path
+        if (customRow)
+          return (
+            <CustomRowRenderer {...{ row, columns, numCols, customRow }} />
+          );
+
+        // Standard Rendering Path
+        return <NormalRowRenderer {...{ row, columns, colGap }} />;
+      })}
+    </Grid>
+  );
 };
 
-const DataGrid = ({ columns, data }) => (
-  <Grid cols={columns.length}>
-    {columns.map(({ Header }) => wrapOrRender("Div", Header))}
-    {data.map((row, index) =>
-      columns.map(({ accessor }) => <div>{row[accessor]}</div>)
-    )}
-  </Grid>
-);
+const NormalRowRenderer = ({ row, columns, colGap }) =>
+  columns.map(({ accessor, Cell: CustomCell }) => (
+    <Cell {...{ colGap }}>
+      {CustomCell ? <CustomCell>{row[accessor]}</CustomCell> : row[accessor]}
+    </Cell>
+  ));
 
-function App() {
-  return (
-    <div className="App">
-      <DataGrid
-        columns={[
-          {
-            Header: "Column One",
-            accessor: "name"
-          },
-          {
-            Header: () => (
-              <div>
-                <em>Column Two</em>
-              </div>
-            ),
-            accessor: "percent"
-          },
-          {
-            Header: "Column Three",
-            accessor: "value"
-          }
-        ]}
-        data={[
-          {
-            name: "A really long row of content",
-            percent: "5%",
-            value: "100000000000000000000000000"
-          },
-          {
-            name:
-              "A really, really, really, really, really long row of content",
-            percent: "5%",
-            value: 1000
-          }
-        ]}
-      />
-    </div>
-  );
-}
+const CustomRowRenderer = props => {
+  const { customRow, numCols, colGap } = props;
 
-const rootElement = document.getElementById("root");
-ReactDOM.render(<App />, rootElement);
+  // Renders data for the row in the same Cell component.
+  if (customRow.CellComponent)
+    return customRow.data.map(data => (
+      <customRow.CellComponent {...{ colGap }}>{data}</customRow.CellComponent>
+    ));
+
+  // Renders the whole row custom.
+  if (customRow.RowComponent)
+    return (
+      <WholeRowWrapper {...{ numCols }}>
+        <customRow.RowComponent />
+      </WholeRowWrapper>
+    );
+
+  console.error("Moonbeam");
+  return null;
+};
